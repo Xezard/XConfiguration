@@ -14,10 +14,10 @@ extends Configuration
         super(plugin, configurationName);
     }
 	
-	@Setter
-	@Getter
-	@ConfigurationField
-	public String helloWorld = "Hello, world!";
+    @Setter
+    @Getter
+    @ConfigurationField
+    public String helloWorld = "Hello, world!";
 }
 ```
 
@@ -27,21 +27,21 @@ For example, we can display hello world message from configuration:
 public class Main
 extends JavaPlugin 
 {
-	private MessagesConfiguration messagesConfiguration = new MessagesConfiguration(this, "messages.yml");
+    private MessagesConfiguration messagesConfiguration = new MessagesConfiguration(this, "messages.yml");
 
-	@Override
-	public void onEnable() 
-	{
-		this.messagesConfiguration.load();
+    @Override
+    public void onEnable() 
+    {
+        this.messagesConfiguration.load();
 		
-		this.getLogger().info(this.messagesConfiguration.getHelloWorld());
-	}
+	this.getLogger().info(this.messagesConfiguration.getHelloWorld());
+    }
 	
-	@Override
-	public void onDisable() 
-	{
-		this.messagesConfiguration = null;
-	}
+    @Override
+    public void onDisable() 
+    {
+	this.messagesConfiguration = null;
+    }
 }
 ```
 After loading the plugin, the messages.yml file is generated automatically, together with the default values, are specified in the configuration class. If messages.yml has already been generated, the field in the class will contain the value from messages.yml.
@@ -54,14 +54,14 @@ You can also easily create your own field types for configurations.
 public class POJO
 implements ConfigurationSerializable
 {
-	private String name;
+    private String name;
 	
-	private int id;
+    private int id;
 	
-	 @Override
-	public Map<String, Object> serialize()
-	{
-		return Map.of("Name", this.name, "Id", this.id);
+    @Override
+    public Map<String, Object> serialize()
+    {
+	return Map.of("Name", this.name, "Id", this.id);
     }
 
     public static POJO deserialize(Map<String, Object> serialized)
@@ -83,11 +83,11 @@ extends Configuration
         super(plugin, configurationName);
     }
 	
-	@ConfigurationField
-	public String helloWorld = "Hello, world!";
+    @ConfigurationField
+    public String helloWorld = "Hello, world!";
 	
-	@ConfigurationField
-	public POJO = new POJO("pojo", 1);
+    @ConfigurationField
+    public POJO = new POJO("pojo", 1);
 }
 ```
 For more specific cases, you can create a specific ConfigurationData class for your object and specify how it should be serialized there:
@@ -96,20 +96,21 @@ For more specific cases, you can create a specific ConfigurationData class for y
 @AllArgsConstructor
 public class POJO
 {
-	private String name;
+    private String name;
 	
-	private int id;
+    private int id;
 	
-	public String serialize()
-	{
-		return this.name + ":" + this.id;
+    public String serialize()
+    {
+	return this.name + ":" + this.id;
     }
 
     public static POJO deserialize(String string)
     {
-		String[] parts = string.split(":");
+	String[] parts = string.split(":");
 		
-		return new POJO(parts[0], Integer.parseInt(parts[1]));
+	return new POJO(parts[0], Integer.parseInt(parts[1]));
+    }
 }
 ```
 ```java
@@ -154,13 +155,11 @@ Don't forget to register your ConfigurationType class:
 @Getter
 public enum ConfigurationType
 {
-	...
+    ...
     POJO(new ConfigurationDataPOJO(), POJO.class);
-	
-	...
 }
 ```
 
-##Notes
+## Notes
 - This project is still in develpment stage.
 - Comments in the configuration file are not currently supported.
