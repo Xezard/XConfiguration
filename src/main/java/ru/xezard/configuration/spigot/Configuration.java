@@ -69,13 +69,8 @@ public abstract class Configuration
                     try {
                         configValue = field.get(this);
 
-                        if (configValue == null)
-                        {
-                            configurationData.set(configuration, path, configurationData.getDefault());
-                        } else {
-                            configurationData.set(configuration, path, configValue);
-                        }
-
+                        configurationData.set(configuration, path, configValue != null ? configValue : configurationData.getDefault());
+                       
                         updated = true;
                         continue;
                     } catch (IllegalStateException | IllegalAccessException e) {
