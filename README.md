@@ -16,7 +16,7 @@ extends Configuration
 	
     @Setter
     @Getter
-    @ConfigurationField
+    @ConfigurationField("Hello-world")
     public String helloWorld = "Hello, world!";
 }
 ```
@@ -83,10 +83,10 @@ extends Configuration
         super(plugin, configurationName);
     }
 	
-    @ConfigurationField
+    @ConfigurationField("Hello-world")
     public String helloWorld = "Hello, world!";
 	
-    @ConfigurationField
+    @ConfigurationField("POJO")
     public POJO = new POJO("pojo", 1);
 }
 ```
