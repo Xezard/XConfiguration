@@ -163,3 +163,6 @@ public enum ConfigurationType
 ## Notes
 - This project is still in develpment stage.
 - Comments in the configuration file are not currently supported.
+
+## License
+XConfiguration is licensed under the Apache 2.0 License. Please see [LICENSE](https://github.com/Xezard/XConfiguration/blob/master/LICENSE "LICENSE") for more info.
