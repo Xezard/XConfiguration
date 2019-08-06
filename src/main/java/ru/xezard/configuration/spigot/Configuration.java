@@ -170,32 +170,28 @@ public abstract class Configuration
 
         Class<? extends Configuration> thisClass = this.getClass();
 
-        for (Field field : this.getFields(thisClass))
+        this.getFields(thisClass)
+            .stream()
+            .filter((field) -> field.isAnnotationPresent(ConfigurationField.class))
+            .forEach((field) ->
         {
-            if (field.isAnnotationPresent(ConfigurationField.class))
+            ConfigurationField data = field.getAnnotation(ConfigurationField.class);
+
+            ConfigurationType.getType(field).ifPresentOrElse((type) ->
             {
-                ConfigurationField data = field.getAnnotation(ConfigurationField.class);
+                fieldsData.put
+                (
+                        field,
 
-                ConfigurationType.getType(field).ifPresentOrElse((type) ->
-                {
-                    fieldsData.put
-                    (
-                            field,
-
-                            SerializationOptions.of
-                            (
-                                    type,
-                                    data.value().isEmpty() ? field.getName() : data.value(),
-                                    data.comment()
-                            )
-                    );
-                }, () -> this.plugin.getLogger().warning("Cannot find type of field: " + field.getName()));
-            } else if (field.getDeclaringClass() != thisClass && this.isModifiable(field.getModifiers())) {
-                ConfigurationType.getType(field).ifPresentOrElse((type) -> {
-                    fieldsData.put(field, SerializationOptions.of(type, field.getName(), new String[0]));
-                }, () -> this.plugin.getLogger().warning("Cannot find type of field: " + field.getName()));
-            }
-        }
+                        SerializationOptions.of
+                        (
+                                type,
+                                data.value().isEmpty() ? field.getName() : data.value(),
+                                data.comment()
+                        )
+                );
+            }, () -> this.plugin.getLogger().warning("Cannot find type of field: " + field.getName() + ", path: " + data.value()));
+        });
 
         return fieldsData;
     }
