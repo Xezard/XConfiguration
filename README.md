@@ -161,7 +161,7 @@ public enum ConfigurationType
 ```
 
 ## Notes
-- This project is still in develpment stage.
+- This project is still in development stage.
 - Comments in the configuration file are not currently supported.
 
 ## License
