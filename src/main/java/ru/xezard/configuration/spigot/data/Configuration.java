@@ -1,19 +1,36 @@
-package ru.xezard.configuration.spigot;
+/*
+ * Copyright 2019 Xezard [Zotov I.]
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+package ru.xezard.configuration.spigot.data;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import lombok.AllArgsConstructor;
+import lombok.Cleanup;
 import lombok.SneakyThrows;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
-import ru.xezard.configuration.spigot.data.ConfigurationData;
+import ru.xezard.configuration.spigot.data.types.AbstractConfigurationData;
 
 @AllArgsConstructor
 public abstract class Configuration
@@ -40,6 +57,8 @@ public abstract class Configuration
     @SuppressWarnings("unchecked")
     public Configuration loadData(File file, boolean save)
     {
+        Multimap<String, String> comments = ArrayListMultimap.create();
+
         YamlConfiguration configuration = new YamlConfiguration()
         {{
             this.load(file);
@@ -60,22 +79,40 @@ public abstract class Configuration
 
                 String path = serializationOptions.getPath();
 
-                ConfigurationData configurationData = serializationOptions.getType().getDataType();
+                AbstractConfigurationData configurationData = serializationOptions.getData();
 
-                Object configValue = configurationData.get(configuration, field.getType(), path, null);
+                Comment[] fieldComments = serializationOptions.getComments();
 
-                if (configValue == null)
+                Object configValue = configuration.get(path);
+
+                if (fieldComments.length > 0)
+                {
+                    for (Comment comment : fieldComments)
+                    {
+                        String commentPath = comment.path();
+
+                        if (commentPath.isBlank() || !path.contains(commentPath))
+                        {
+                            continue;
+                        }
+
+                        comments.putAll(commentPath, List.of(comment.comments()));
+                    }
+                }
+
+                if (configValue == null || configValue.getClass() != field.getType())
                 {
                     try {
                         configValue = field.get(this);
 
-                        configurationData.set(configuration, path, configValue != null ? configValue : configurationData.getDefault());
-                       
+                        configurationData.set(configuration, path, configValue != null ?
+                                              configValue : configurationData.getDefault(), field.getType());
+
                         updated = true;
                         continue;
                     } catch (IllegalStateException | IllegalAccessException e) {
-                        this.plugin.getLogger().warning("Could not get value to config file: " + configuration.getName() +
-                                                                ", path: " + path);
+                        this.plugin.getLogger().warning("Could not get value from field: " + configuration.getName() +
+                                                        ", path: " + path);
                         e.printStackTrace();
                     }
                 }
@@ -86,11 +123,9 @@ public abstract class Configuration
                     } catch (IllegalArgumentException e) {
                         field.set(this, null);
                     }
-
-                    if (serializationOptions.getComment().length > 0) {} // Currently not worked
                 } catch (IllegalAccessException e) {
-                    this.plugin.getLogger().warning("Could not set value in configuration file: " + configuration.getName() +
-                                                            ", path: " + path);
+                    this.plugin.getLogger().warning("Could not set value in field from configuration file: " + configuration.getName() +
+                                                    ", path: " + path);
                     e.printStackTrace();
                 }
             } finally {
@@ -101,6 +136,41 @@ public abstract class Configuration
         if (save && updated)
         {
             configuration.save(file);
+        }
+
+        if (!comments.isEmpty())
+        {
+            List<String> lines = new ArrayList<> ();
+
+            @Cleanup
+            Scanner scanner = new Scanner(file);
+
+            while (scanner.hasNextLine())
+            {
+                String line = scanner.nextLine();
+
+                comments.forEach((path, comment) ->
+                {
+                    if (!line.contains(path))
+                    {
+                        return;
+                    }
+
+                    String trimmed = comment.trim();
+
+                    if (trimmed.startsWith("#") || trimmed.isEmpty())
+                    {
+                        lines.add(comment);
+                    }
+                });
+
+                lines.add(line);
+            }
+
+            @Cleanup
+            PrintWriter printWriter = new PrintWriter(file);
+
+            lines.forEach(printWriter::println);
         }
 
         return this;
@@ -115,7 +185,7 @@ public abstract class Configuration
             this.load(file);
         }};
 
-        boolean differs = false;
+        boolean hasChanges = false;
 
         for (Map.Entry<Field, SerializationOptions> fieldData : this.getFieldsData().entrySet())
         {
@@ -125,7 +195,7 @@ public abstract class Configuration
 
             String path = serializationOptions.getPath();
 
-            ConfigurationData configurationData = serializationOptions.getType().getDataType();
+            AbstractConfigurationData configurationData = serializationOptions.getData();
 
             boolean accessible = field.isAccessible();
 
@@ -136,27 +206,27 @@ public abstract class Configuration
 
                 try {
                     fieldValue = field.get(this);
-                } catch (final IllegalStateException | IllegalAccessException e) {
-                    this.plugin.getLogger().warning("Could not get value to config file: " + configuration.getName() +
-                                                            ", path: " + path);
+                } catch (IllegalStateException | IllegalAccessException e) {
+                    this.plugin.getLogger().warning("Could not get value from config file: " +
+                                                    configuration.getName() + ", path: " + path);
                     continue;
                 }
 
-                Object configValue = configurationData.get(configuration, field.getType(), serializationOptions.getPath());
+                Object configValue = configurationData.get(configuration, path, field.getType());
 
-                if (fieldValue != null && !fieldValue.equals(configValue)
-                        || configValue != null && !configValue.equals(fieldValue))
+                if (fieldValue != null && !fieldValue.equals(configValue) ||
+                    configValue != null && !configValue.equals(fieldValue))
                 {
-                    configurationData.set(configuration, serializationOptions.getPath(), fieldValue);
+                    configurationData.set(configuration, path, fieldValue, field.getType());
 
-                    differs = true;
+                    hasChanges = true;
                 }
             } finally {
                 field.setAccessible(accessible);
             }
         }
 
-        if (differs)
+        if (hasChanges)
         {
             configuration.save(file);
         }
@@ -177,20 +247,14 @@ public abstract class Configuration
         {
             ConfigurationField data = field.getAnnotation(ConfigurationField.class);
 
-            ConfigurationType.getType(field).ifPresentOrElse((type) ->
+            ConfigurationManager.getType(field).ifPresentOrElse((configurationData) ->
             {
-                fieldsData.put
-                (
-                        field,
-
-                        SerializationOptions.of
-                        (
-                                type,
-                                data.value().isEmpty() ? field.getName() : data.value(),
-                                data.comment()
-                        )
-                );
-            }, () -> this.plugin.getLogger().warning("Cannot find type of field: " + field.getName() + ", path: " + data.value()));
+                fieldsData.put(field, SerializationOptions.builder()
+                                                          .data(configurationData)
+                                                          .path(data.value().isEmpty() ? field.getName() : data.value())
+                                                          .comments(data.comments())
+                                                          .build());
+            }, () -> this.plugin.getLogger().warning("Cannot find configuration data for field: " + field.getName()));
         });
 
         return fieldsData;
@@ -286,31 +350,25 @@ public abstract class Configuration
 
         for (Field field : this.getFields(thisClass))
         {
-            if (field.getDeclaringClass() != thisClass &&
-                this.isModifiable(field.getModifiers()) || field.isAnnotationPresent(ConfigurationField.class))
+            if (field.getDeclaringClass() == thisClass || !field.isAnnotationPresent(ConfigurationField.class))
             {
-                boolean accessible = field.isAccessible();
+                continue;
+            }
 
-                try {
-                    field.setAccessible(true);
+            boolean accessible = field.isAccessible();
 
-                    field.set(this, field.get(configuration));
-                } catch (final IllegalAccessException e) {
-                    this.plugin.getLogger().warning("Could not copy value from one configuration object to another: ");
-                    e.printStackTrace();
-                } finally {
-                    field.setAccessible(accessible);
-                }
+            try {
+                field.setAccessible(true);
+
+                field.set(this, field.get(configuration));
+            } catch (final IllegalAccessException e) {
+                this.plugin.getLogger().warning("Could not copy value from one configuration object to another: ");
+                e.printStackTrace();
+            } finally {
+                field.setAccessible(accessible);
             }
         }
 
         return this;
-    }
-
-    public boolean isModifiable(int modifiers)
-    {
-        return (modifiers & Modifier.STATIC) == 0
-                && (modifiers & Modifier.FINAL) == 0
-                && (modifiers & Modifier.TRANSIENT) == 0;
     }
 }
