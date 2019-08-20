@@ -21,7 +21,7 @@ repositories {
 And then add XConfiguration library to the dependency:
 ```groovy
 dependencies {
-    implementation 'com.github.Xezard:XConfiguration:v.1.0-release'
+    implementation 'com.github.Xezard:XConfiguration:1.0-RELEASE'
 }
 ```
 * **Maven**:
@@ -37,7 +37,7 @@ And then add XConfiguration library to the dependency:
 <dependency>
     <groupId>com.github.Xezard</groupId>
     <artifactId>XConfiguration</artifactId>
-    <version>v.1.0-release</version>
+    <version>1.0-RELEASE</version>
 </dependency>
 ```
 
