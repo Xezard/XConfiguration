@@ -90,7 +90,7 @@ extends Configuration
     public POJO = new POJO("pojo", 1);
 }
 ```
-For more specific cases, you can create a specific ConfigurationData class for your object and specify how it should be serialized there:
+For more specific cases, you can create a ConfigurationData class for your object and specify how it should be serialized there:
 ```java
 @Data
 @AllArgsConstructor
@@ -161,7 +161,7 @@ public enum ConfigurationType
 ```
 
 ## Notes
-- This project is still in develpment stage.
+- This project is still in development stage.
 - Comments in the configuration file are not currently supported.
 
 ## License
