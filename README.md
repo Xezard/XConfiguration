@@ -35,9 +35,9 @@ First include jitpack repository:
 And then add XConfiguration library to the dependency:
 ```xml
 <dependency>
-    <groupId>com.mojang</groupId>
-    <artifactId>brigadier</artifactId>
-    <version>(the latest version)</version>
+    <groupId>com.github.Xezard</groupId>
+    <artifactId>XConfiguration</artifactId>
+    <version>v.1.0-release</version>
 </dependency>
 ```
 
