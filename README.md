@@ -190,7 +190,7 @@ extends Configuration
     }
 	
     @ConfigurationField("POJO")
-    public POJO = new POJO("pojo", 1);
+    public POJO pojo = new POJO("pojo", 1);
 }
 ```
 For more specific cases, you can create a ConfigurationData class for your object and specify how it should be serialized there:
@@ -276,7 +276,7 @@ extends JavaPlugin
 		
         this.messagesConfiguration.load();
 
-	this.getLogger().info(this.messagesConfiguration.getHelloWorld());
+	this.getLogger().info(this.messagesConfiguration.getPojo());
     }
 	
     @Override
