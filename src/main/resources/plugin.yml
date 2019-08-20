@@ -1,0 +1,6 @@
+name: XConfiguration
+main: ru.xezard.configuration.spigot.ConfigurationPlugin
+description: Universal configuration library for spigot
+author: Xezard
+version: 1.0
+api-version: 1.14
