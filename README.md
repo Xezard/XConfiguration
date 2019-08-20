@@ -1,17 +1,55 @@
 # XConfiguration
 
-This project is a continuation of the [ez-cfg](https://github.com/JarvisCraft/ez-cfg "ez-cfg") project of the user [PROgrm_JARvis](https://github.com/JarvisCraft "PROgrm_JARvis"). 
-It is a convenient library for interacting with the Bukkit / Spigot configuration.
+[![GitHub](https://img.shields.io/github/license/xezard/XConfiguration)](https://github.com/Xezard/XConfiguration/blob/master/LICENSE) [![](https://jitpack.io/v/Xezard/XConfiguration.svg)](https://jitpack.io/#Xezard/XConfiguration)
 
-## Usage
-First of all, we need to create our configuration class:
+XConfiguration is a convenient library for interacting with the Bukkit / Spigot configuration.
+
+* Supported Java version: 11+
+* Tested on spigot version: 1.14.4
+
+## Getting started
+
+To get a XConfiguration into your build:
+
+* **Gradle**:
+First include jitpack repository:
+```groovy
+repositories {
+	maven { url 'https://jitpack.io' }
+}
+```
+And then add XConfiguration library to the dependency:
+```groovy
+dependencies {
+	implementation 'com.github.Xezard:XConfiguration:v.1.0-release'
+}
+```
+* **Maven**:
+First include jitpack repository:
+```xml
+<repository>
+	<id>jitpack.io</id>
+	<url>https://jitpack.io</url>
+</repository>
+```
+And then add XConfiguration library to the dependency:
+```xml
+<dependency>
+    <groupId>com.mojang</groupId>
+    <artifactId>brigadier</artifactId>
+    <version>(the latest version)</version>
+</dependency>
+```
+
+# Usage
+Consider the following example:
 ```java
 public class MessagesConfiguration
 extends Configuration
 {
-    public MessagesConfiguration(Plugin plugin, String configurationName)
+    public MessagesConfiguration(Plugin plugin)
     {
-        super(plugin, configurationName);
+        super(plugin, "messages.yml");
     }
 	
     @Setter
@@ -21,32 +59,95 @@ extends Configuration
 }
 ```
 
-For example, we can display hello world message from configuration:
+First of all, we need to create our configuration class.
+The class must be inherited from Configuration.
+In the superclass constructor, you need to pass the main instance of the plugin (which extends JavaPlugin) and the file name for the configuration.
+Inside a class, all declared fields annotated with @ConfigurationField are considered configuration fields. The @ConfigurationField annotation value is the path for the field value in the configuration.
 
+In the main class of the plugin:
 ```java
 public class Main
 extends JavaPlugin 
 {
-    private MessagesConfiguration messagesConfiguration = new MessagesConfiguration(this, "messages.yml");
+    private MessagesConfiguration messagesConfiguration = new MessagesConfiguration(this);
 
     @Override
     public void onEnable() 
     {
+		/* 
+		 * This method automatically creates a configuration file 
+		 * if it has not already been created. Also, it fills your class 
+		 * with values from the configuration, or vice versa fills the 
+		 * configuration with values from the class if there are no 
+		 *corresponding fields in the configuration.
+		 *
+		 * You can also call this method when you want to reload 
+		 * the configuration of your plugin.
+		 */
         this.messagesConfiguration.load();
 		
-	this.getLogger().info(this.messagesConfiguration.getHelloWorld());
+		/*
+		 * After loading the configuration, we can easily get
+		 * the values of our fields from the class.
+		 */
+		this.getLogger().info(this.messagesConfiguration.getHelloWorld());
     }
 	
     @Override
     public void onDisable() 
     {
-	this.messagesConfiguration = null;
+		this.messagesConfiguration = null;
     }
 }
 ```
-After loading the plugin, the messages.yml file is generated automatically, together with the default values, are specified in the configuration class. If messages.yml has already been generated, the field in the class will contain the value from messages.yml.
+You can also specify comments for your fields in the configuration:
 
-You can also easily create your own field types for configurations.
+```java
+public class MessagesConfiguration
+extends Configuration
+{
+    public MessagesConfiguration(Plugin plugin)
+    {
+        super(plugin, "messages.yml");
+    }
+	
+    @Setter
+    @Getter
+    @ConfigurationField
+    (
+            value = "Hello-world.With-comment-above",
+			comments = 
+			{
+				@Comment
+				(
+					path = "Hello-world",
+                    comments = {"# Single-line comment"}
+				),
+			
+				@Comment
+				(
+                    path = "With-comment-above",
+                    comments =
+                    {
+                            "",
+                            "  # Indented Comment"
+                    }
+			)}
+    )
+    public String helloWorld = "Hello, world!";
+}
+```
+After calling the .load() method, you will see the following configuration:
+
+```yaml
+# Single-line comment
+Hello-world:
+
+  # Indented Comment
+  With-comment-above: Hello, world!
+```
+Also you can easily create your own field types for configurations.
+For example:
 ```java
 @Data
 @AllArgsConstructor
@@ -61,7 +162,7 @@ implements ConfigurationSerializable
     @Override
     public Map<String, Object> serialize()
     {
-	return Map.of("Name", this.name, "Id", this.id);
+		return Map.of("Name", this.name, "Id", this.id);
     }
 
     public static POJO deserialize(Map<String, Object> serialized)
@@ -78,13 +179,10 @@ And then:
 public class MessagesConfiguration
 extends Configuration
 {
-    public MessagesConfiguration(Plugin plugin, String configurationName)
+    public MessagesConfiguration(Plugin plugin)
     {
-        super(plugin, configurationName);
+        super(plugin, "messages.yml");
     }
-	
-    @ConfigurationField("Hello-world")
-    public String helloWorld = "Hello, world!";
 	
     @ConfigurationField("POJO")
     public POJO = new POJO("pojo", 1);
@@ -102,39 +200,45 @@ public class POJO
 	
     public String serialize()
     {
-	return this.name + ":" + this.id;
+		return this.name + ":" + this.id;
     }
 
     public static POJO deserialize(String string)
     {
-	String[] parts = string.split(":");
+		String[] parts = string.split(":");
 		
-	return new POJO(parts[0], Integer.parseInt(parts[1]));
+		return new POJO(parts[0], Integer.parseInt(parts[1]));
     }
 }
 ```
 ```java
+@EqualsAndHashCode(callSuper = true)
 public class ConfigurationDataPOJO
-extends ConfigurationData<POJO>
+extends AbstractConfigurationData<POJO>
 {
-    @Override
-    public void set(FileConfiguration configuration, String path, POJO pojo)
+    public ConfigurationDataPOJO()
     {
-        configuration.set(path, pojo.serialize());
+        super(POJO.class);
+    }
+	
+	@Override
+    public void set(FileConfiguration configuration, String path, POJO value, Class<?>... type)
+    {
+        configuration.set(path, value.serialize());
     }
 
     @Override
-    public POJO get(FileConfiguration configuration, Class<POJO> type, String path)
+    public POJO get(FileConfiguration configuration, String path, Class<?>... type)
     {
         return POJO.deserialize(configuration.getString(path));
     }
 
     @Override
-    public POJO get(FileConfiguration configuration, Class<POJO> type, String path, POJO default)
+    public POJO get(FileConfiguration configuration, String path, POJO def, Class<?>... type)
     {
-        Object value = configuration.get(path);
-
-        return value instanceof String ? POJO.deserialize((String) value) : default;
+		POJO pojo = this.get(configuration, path, type);
+		
+        return pojo == null ? def : pojo;
     }
 
     @Override
@@ -144,25 +248,45 @@ extends ConfigurationData<POJO>
     }
 
     @Override
-    public Time getDefault()
+    public POJO getDefault()
     {
-        return new POJO("pojo", 1);
+        return new POJO("null", 0);
     }
 }
 ```
-Don't forget to register your ConfigurationType class:
+
+Don't forget to register your ConfigurationData class:
 ```java
-@Getter
-public enum ConfigurationType
+public class Main
+extends JavaPlugin 
 {
-    ...
-    POJO(new ConfigurationDataPOJO(), POJO.class);
+    private MessagesConfiguration messagesConfiguration = new MessagesConfiguration(this);
+	
+	private ConfigurationDataPOJO configurationDataPOJO = new ConfigurationDataPOJO();
+
+    @Override
+    public void onEnable() 
+    {
+		ConfigurationManager.register(configurationDataPOJO);
+		
+        this.messagesConfiguration.load();
+
+		this.getLogger().info(this.messagesConfiguration.getHelloWorld());
+    }
+	
+    @Override
+    public void onDisable() 
+    {
+		ConfigurationManager.unregister(configurationDataPOJO);
+	
+		this.messagesConfiguration = null;
+    }
 }
 ```
 
-## Notes
-- This project is still in development stage.
-- Comments in the configuration file are not currently supported.
+## Bugs and Feedback
+
+For bugs, questions and discussions please use the [Github Issues](https://github.com/Xezard/XConfiguration/issues).
 
 ## License
 XConfiguration is licensed under the Apache 2.0 License. Please see [LICENSE](https://github.com/Xezard/XConfiguration/blob/master/LICENSE "LICENSE") for more info.
