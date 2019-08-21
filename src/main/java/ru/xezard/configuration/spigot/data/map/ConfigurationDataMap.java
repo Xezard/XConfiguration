@@ -19,6 +19,7 @@ package ru.xezard.configuration.spigot.data.map;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import org.bukkit.configuration.ConfigurationSection;
@@ -41,10 +42,14 @@ extends AbstractConfigurationData<Map<String, ?>>
     {
         values.forEach((key, value) ->
         {
-            ConfigurationManager.getType(value.getClass()).ifPresentOrElse((configurationData) ->
+            Optional<AbstractConfigurationData> optionalConfigurationData = ConfigurationManager.getType(value.getClass());
+
+            if (optionalConfigurationData.isPresent())
             {
-                configurationData.set(configuration, path + "." + key, value);
-            }, () -> super.set(configuration, path, values));
+                optionalConfigurationData.get().set(configuration, path + "." + key, value);
+            } else {
+                super.set(configuration, path, values);
+            }
         });
     }
 

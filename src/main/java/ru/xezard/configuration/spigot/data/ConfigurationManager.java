@@ -36,7 +36,7 @@ public class ConfigurationManager
 {
     private final ConfigurationDataCollection LIST = new ConfigurationDataCollection();
 
-    private final List<AbstractConfigurationData> CONFIGURATION_DATAS = new ArrayList<> ()
+    private final List<AbstractConfigurationData> CONFIGURATION_DATAS = new ArrayList<AbstractConfigurationData> ()
     {{
         this.add(new ConfigurationDataBoolean());
         this.add(new ConfigurationDataByte());
@@ -79,7 +79,7 @@ public class ConfigurationManager
         CONFIGURATION_DATAS.remove(configurationData);
     }
 
-    public Optional<AbstractConfigurationData> getType(Field field)
+    protected Optional<AbstractConfigurationData> getType(Field field)
     {
         Class<?> fieldType = field.getType();
 
@@ -95,7 +95,7 @@ public class ConfigurationManager
 
                 optionalConfigurationData = getType((Class<?>) typeArgument, true);
 
-                return optionalConfigurationData.isEmpty() ? Optional.of(LIST) : optionalConfigurationData;
+                return optionalConfigurationData.isPresent() ? optionalConfigurationData : Optional.of(LIST);
             }
         }
 
@@ -113,7 +113,7 @@ public class ConfigurationManager
     }
 
     @SuppressWarnings("unchecked")
-    public Optional<AbstractConfigurationData> getType(Class<?> clazz, boolean isCollection)
+    protected Optional<AbstractConfigurationData> getType(Class<?> clazz, boolean isCollection)
     {
         return CONFIGURATION_DATAS.stream()
                                   .filter((configurationData) -> configurationData.isCollection() == isCollection)

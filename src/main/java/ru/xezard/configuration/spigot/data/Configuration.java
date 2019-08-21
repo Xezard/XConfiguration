@@ -33,29 +33,15 @@ import org.bukkit.plugin.Plugin;
 import ru.xezard.configuration.spigot.data.types.AbstractConfigurationData;
 
 @AllArgsConstructor
-public abstract class Configuration
+public class Configuration
 {
     private Plugin plugin;
 
     private String configurationName;
 
-    public List<Field> getFields(Class<?> clazz)
-    {
-        Class parentClass = clazz.getSuperclass();
-
-        List<Field> fields = Lists.newArrayList(clazz.getDeclaredFields());
-
-        if (parentClass != null && parentClass != Object.class)
-        {
-            fields.addAll(this.getFields(parentClass));
-        }
-
-        return fields;
-    }
-
     @SneakyThrows
     @SuppressWarnings("unchecked")
-    public Configuration loadData(File file, boolean save)
+    private Configuration loadData(File file, boolean save)
     {
         Multimap<String, String> comments = ArrayListMultimap.create();
 
@@ -91,12 +77,12 @@ public abstract class Configuration
                     {
                         String commentPath = comment.path();
 
-                        if (commentPath.isBlank() || !path.contains(commentPath))
+                        if (commentPath.isEmpty() || !path.contains(commentPath))
                         {
                             continue;
                         }
 
-                        comments.putAll(commentPath, List.of(comment.comments()));
+                        comments.putAll(commentPath, Arrays.asList(comment.comments()));
                     }
                 }
 
@@ -178,7 +164,7 @@ public abstract class Configuration
 
     @SneakyThrows
     @SuppressWarnings("unchecked")
-    public Configuration saveData(File file)
+    private Configuration saveData(File file)
     {
         YamlConfiguration configuration = new YamlConfiguration()
         {{
@@ -234,9 +220,9 @@ public abstract class Configuration
         return this;
     }
 
-    public Map<Field, SerializationOptions> getFieldsData()
+    private Map<Field, SerializationOptions> getFieldsData()
     {
-        Map<Field, SerializationOptions> fieldsData = new HashMap<> ();
+        LinkedHashMap<Field, SerializationOptions> fieldsData = new LinkedHashMap<> ();
 
         Class<? extends Configuration> thisClass = this.getClass();
 
@@ -247,14 +233,20 @@ public abstract class Configuration
         {
             ConfigurationField data = field.getAnnotation(ConfigurationField.class);
 
-            ConfigurationManager.getType(field).ifPresentOrElse((configurationData) ->
+            Optional<AbstractConfigurationData> optionalConfigurationData = ConfigurationManager.getType(field);
+
+            if (optionalConfigurationData.isPresent())
             {
+                AbstractConfigurationData configurationData = optionalConfigurationData.get();
+
                 fieldsData.put(field, SerializationOptions.builder()
                                                           .data(configurationData)
                                                           .path(data.value().isEmpty() ? field.getName() : data.value())
                                                           .comments(data.comments())
                                                           .build());
-            }, () -> this.plugin.getLogger().warning("Cannot find configuration data for field: " + field.getName()));
+            } else {
+                this.plugin.getLogger().warning("Cannot find configuration data for field: " + field.getName());
+            }
         });
 
         return fieldsData;
@@ -361,7 +353,7 @@ public abstract class Configuration
                 field.setAccessible(true);
 
                 field.set(this, field.get(configuration));
-            } catch (final IllegalAccessException e) {
+            } catch (IllegalAccessException e) {
                 this.plugin.getLogger().warning("Could not copy value from one configuration object to another: ");
                 e.printStackTrace();
             } finally {
@@ -370,5 +362,10 @@ public abstract class Configuration
         }
 
         return this;
+    }
+
+    private List<Field> getFields(Class<?> clazz)
+    {
+        return Arrays.asList(clazz.getDeclaredFields());
     }
 }
