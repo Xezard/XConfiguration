@@ -4,7 +4,7 @@
 
 XConfiguration is a convenient library for interacting with the Bukkit / Spigot configuration.
 
-* Supported Java version: 11+
+* Supported Java version: 8+
 * Tested on spigot version: 1.14.4
 
 ## Getting started
