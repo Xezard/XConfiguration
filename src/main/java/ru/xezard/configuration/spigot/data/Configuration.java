@@ -21,9 +21,9 @@ import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.stream.Stream;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import lombok.AllArgsConstructor;
 import lombok.Cleanup;
@@ -226,10 +226,9 @@ public class Configuration
 
         Class<? extends Configuration> thisClass = this.getClass();
 
-        this.getFields(thisClass)
-            .stream()
-            .filter((field) -> field.isAnnotationPresent(ConfigurationField.class))
-            .forEach((field) ->
+        Stream.of(thisClass.getDeclaredFields())
+              .filter((field) -> field.isAnnotationPresent(ConfigurationField.class))
+              .forEach((field) ->
         {
             ConfigurationField data = field.getAnnotation(ConfigurationField.class);
 
@@ -340,7 +339,7 @@ public class Configuration
     {
         Class thisClass = this.getClass();
 
-        for (Field field : this.getFields(thisClass))
+        for (Field field : thisClass.getDeclaredFields())
         {
             if (field.getDeclaringClass() == thisClass || !field.isAnnotationPresent(ConfigurationField.class))
             {
@@ -362,10 +361,5 @@ public class Configuration
         }
 
         return this;
-    }
-
-    private List<Field> getFields(Class<?> clazz)
-    {
-        return Arrays.asList(clazz.getDeclaredFields());
     }
 }
