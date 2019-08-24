@@ -37,7 +37,7 @@ public class Configuration
 {
     private Plugin plugin;
 
-    private String configurationName;
+    private String fileName;
 
     @SneakyThrows
     @SuppressWarnings("unchecked")
@@ -45,10 +45,9 @@ public class Configuration
     {
         Multimap<String, String> comments = ArrayListMultimap.create();
 
-        YamlConfiguration configuration = new YamlConfiguration()
-        {{
-            this.load(file);
-        }};
+        YamlConfiguration configuration = new YamlConfiguration();
+
+        configuration.load(file);
 
         boolean updated = false;
 
@@ -98,18 +97,16 @@ public class Configuration
                         continue;
                     } catch (IllegalStateException | IllegalAccessException e) {
                         this.plugin.getLogger().warning("Could not get value from field: " + configuration.getName() +
-                                                        ", path: " + path);
+                                                        ", path: " + path + ", and set it to configuration");
                         e.printStackTrace();
                     }
                 }
 
                 try {
-                    try {
-                        field.set(this, configValue);
-                    } catch (IllegalArgumentException e) {
-                        field.set(this, null);
-                    }
+                    field.set(this, configValue);
                 } catch (IllegalAccessException e) {
+                    field.set(this, null);
+
                     this.plugin.getLogger().warning("Could not set value in field from configuration file: " + configuration.getName() +
                                                     ", path: " + path);
                     e.printStackTrace();
@@ -166,10 +163,9 @@ public class Configuration
     @SuppressWarnings("unchecked")
     private Configuration saveData(File file)
     {
-        YamlConfiguration configuration = new YamlConfiguration()
-        {{
-            this.load(file);
-        }};
+        YamlConfiguration configuration = new YamlConfiguration();
+
+        configuration.load(file);
 
         boolean hasChanges = false;
 
@@ -224,9 +220,7 @@ public class Configuration
     {
         LinkedHashMap<Field, SerializationOptions> fieldsData = new LinkedHashMap<> ();
 
-        Class<? extends Configuration> thisClass = this.getClass();
-
-        Stream.of(thisClass.getDeclaredFields())
+        Stream.of(this.getClass().getDeclaredFields())
               .filter((field) -> field.isAnnotationPresent(ConfigurationField.class))
               .forEach((field) ->
         {
@@ -252,63 +246,59 @@ public class Configuration
     }
 
     @SneakyThrows
-    public Configuration load(File file, boolean save)
+    private Configuration load(File file, boolean save)
     {
-        File parent = file.getParentFile();
-
-        if (!parent.isDirectory())
-        {
-            Files.createDirectory(parent.toPath());
-        }
-
-        if (!file.isFile())
-        {
-            Files.createFile(file.toPath());
-        }
+        this.createFile(file);
 
         return this.loadData(file, save);
     }
 
-    public Configuration load(String path, boolean save)
+    private Configuration load(String path, boolean save)
     {
         return this.load(new File(this.plugin.getDataFolder(), path), save);
     }
 
     public Configuration load(boolean save)
     {
-        return this.load(this.configurationName, save);
+        return this.load(this.fileName, save);
     }
 
     @SneakyThrows
-    public Configuration load(File file)
+    private Configuration load(File file)
     {
-        File parent = file.getParentFile();
-
-        if (!parent.isDirectory())
-        {
-            Files.createDirectory(parent.toPath());
-        }
-
-        if (!file.isFile())
-        {
-            Files.createFile(file.toPath());
-        }
-
-        return this.loadData(file, true);
+        return this.load(file, true);
     }
 
-    public Configuration load(String path)
+    private Configuration load(String path)
     {
         return this.load(new File(this.plugin.getDataFolder(), path));
     }
 
     public Configuration load()
     {
-        return this.load(this.configurationName);
+        return this.load(this.fileName);
     }
 
     @SneakyThrows
-    public Configuration save(File file)
+    private Configuration save(File file)
+    {
+        this.createFile(file);
+
+        return this.saveData(file);
+    }
+
+    private Configuration save(String path)
+    {
+        return this.save(new File(this.plugin.getDataFolder(), path));
+    }
+
+    public Configuration save()
+    {
+        return this.save(this.fileName);
+    }
+
+    @SneakyThrows
+    private void createFile(File file)
     {
         File parent = file.getParentFile();
 
@@ -321,45 +311,5 @@ public class Configuration
         {
             Files.createFile(file.toPath());
         }
-
-        return this.saveData(file);
-    }
-
-    public Configuration save(String path)
-    {
-        return this.save(new File(this.plugin.getDataFolder(), path));
-    }
-
-    public Configuration save()
-    {
-        return this.save(this.configurationName);
-    }
-
-    public Configuration copyFrom(Configuration configuration)
-    {
-        Class thisClass = this.getClass();
-
-        for (Field field : thisClass.getDeclaredFields())
-        {
-            if (field.getDeclaringClass() == thisClass || !field.isAnnotationPresent(ConfigurationField.class))
-            {
-                continue;
-            }
-
-            boolean accessible = field.isAccessible();
-
-            try {
-                field.setAccessible(true);
-
-                field.set(this, field.get(configuration));
-            } catch (IllegalAccessException e) {
-                this.plugin.getLogger().warning("Could not copy value from one configuration object to another: ");
-                e.printStackTrace();
-            } finally {
-                field.setAccessible(accessible);
-            }
-        }
-
-        return this;
     }
 }
