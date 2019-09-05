@@ -29,6 +29,7 @@ import lombok.AllArgsConstructor;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.plugin.Plugin;
 import ru.xezard.configuration.spigot.data.types.AbstractConfigurationData;
 
@@ -68,7 +69,7 @@ public class Configuration
 
                 Comment[] fieldComments = serializationOptions.getComments();
 
-                Object configValue = configuration.get(path);
+                Object configValue = configurationData.get(configuration, path, field.getClass());
 
                 if (fieldComments.length > 0)
                 {
@@ -85,7 +86,7 @@ public class Configuration
                     }
                 }
 
-                if (configValue == null || configValue.getClass() != field.getType())
+                if (configValue == null || !field.getType().isAssignableFrom(configValue.getClass()))
                 {
                     try {
                         configValue = field.get(this);
@@ -104,9 +105,7 @@ public class Configuration
 
                 try {
                     field.set(this, configValue);
-                } catch (IllegalAccessException e) {
-                    field.set(this, null);
-
+                } catch (Exception e) {
                     this.plugin.getLogger().warning("Could not set value in field from configuration file: " + configuration.getName() +
                                                     ", path: " + path);
                     e.printStackTrace();
@@ -132,6 +131,7 @@ public class Configuration
             {
                 String line = scanner.nextLine();
 
+                comments.removeAll(line.replace(":", ""));
                 comments.forEach((path, comment) ->
                 {
                     if (!line.contains(path))
