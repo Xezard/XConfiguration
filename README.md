@@ -103,6 +103,7 @@ extends JavaPlugin
 You can also specify comments for your fields in the configuration:
 
 ```java
+@Getter
 public class MessagesConfiguration
 extends Configuration
 {
@@ -111,8 +112,6 @@ extends Configuration
     	super(plugin, "messages.yml");
     }
 	
-    @Setter
-    @Getter
     @ConfigurationField("Hello-world.With-comment-above")
     @ConfigurationComments({"# First comment line", "# Second comment line"})
     public String helloWorld = "Hello, world!";
