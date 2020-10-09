@@ -232,6 +232,8 @@ implements IConfiguration
             return;
         }
 
+        int configurationIndent = configuration.options().getIndent();
+
         YamlEffectiveModel yamlEffectiveModel = new YamlEffectiveModel();
 
         List<String> lines = new ArrayList<> ();
@@ -244,7 +246,7 @@ implements IConfiguration
 
                 if (yamlEffectiveModel.isKey(line))
                 {
-                    long lineIndent = yamlEffectiveModel.getIndent(line) / 2,
+                    long lineIndent = yamlEffectiveModel.getIndent(line) / configurationIndent,
                          currentIndent = yamlEffectiveModel.getCurrentIndent();
 
                     String key = yamlEffectiveModel.toKey(line);
@@ -283,7 +285,7 @@ implements IConfiguration
                         lines.add(Strings.repeat
                         (
                                 " ",
-                                ((int) yamlEffectiveModel.getCurrentIndent() * configuration.options().getIndent())
+                                ((int) yamlEffectiveModel.getCurrentIndent() * configurationIndent)
                         ) + trimmed);
                     }
                 });
