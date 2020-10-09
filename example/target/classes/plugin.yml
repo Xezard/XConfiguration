@@ -1,0 +1,8 @@
+name: XConfigurationExample
+main: ru.xezard.example.spigot.ExamplePlugin
+description: Universal configuration library for yml
+author: Xezard
+version: 1.0
+api-version: 1.14
+depend:
+- XConfiguration

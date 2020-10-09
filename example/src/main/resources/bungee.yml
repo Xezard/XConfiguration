@@ -1,0 +1,6 @@
+name: XConfigurationExample
+main: ru.xezard.example.bungee.ExamplePlugin
+version: 1.0
+author: Xezard
+depends:
+- XConfiguration
