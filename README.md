@@ -5,7 +5,8 @@
 XConfiguration is a convenient library for interacting with the Bukkit / Spigot configuration.
 
 * Supported Java version: 8+
-* Tested on spigot version: 1.14.4
+* Tested on spigot version: 1.16.4
+* Tested on bungeecord
 
 ## Getting started
 
@@ -37,31 +38,30 @@ And then add XConfiguration library to the dependency:
 <dependency>
     <groupId>com.github.Xezard</groupId>
     <artifactId>XConfiguration</artifactId>
-    <version>1.0-RELEASE</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
 ## Usage
 Consider the following example:
 ```java
+@Getter
 public class MessagesConfiguration
 extends Configuration
 {
-    public MessagesConfiguration(Plugin plugin)
+    public MessagesConfiguration(File folder)
     {
-        super(plugin, "messages.yml");
+        super(folder.getAbsolutePath() + File.separator + "messages.yml");
     }
 	
-    @Setter
-    @Getter
     @ConfigurationField("Hello-world")
     public String helloWorld = "Hello, world!";
 }
 ```
 
 First of all, we need to create our configuration class.
-This class must be inherited from Configuration.
-In the superclass constructor, you need to pass the main instance of the plugin (which extends JavaPlugin) and the file name for the configuration.
+This class must be inherited from ru.xezard.configurations.Configuration.
+In the superclass constructor, you need to pass the path to file and its name for the configuration.
 Inside a class, all declared fields annotated with @ConfigurationField are considered configuration fields. The @ConfigurationField annotation value is the path for the field value in the configuration.
 
 In the main class of the plugin:
@@ -69,7 +69,7 @@ In the main class of the plugin:
 public class Main
 extends JavaPlugin 
 {
-    private MessagesConfiguration messagesConfiguration = new MessagesConfiguration(this);
+    private MessagesConfiguration messagesConfiguration = new MessagesConfiguration(this.getDataFolder());
 
     @Override
     public void onEnable() 
@@ -113,42 +113,17 @@ extends Configuration
 	
     @Setter
     @Getter
-    @ConfigurationField
-    (
-    	value = "Hello-world.With-comment-above",
-	comments = 
-	{
-		@Comment
-		(
-			path = "Hello-world",
-			comments = {"# Single-line comment"}
-		),
-			
-		@Comment
-		(
-                   	path = "With-comment-above",
-			comments =
-			{
-				"",
-				"  # Indented Comment"
-                        }
-		)
-	}
-    )
+    @ConfigurationField("Hello-world.With-comment-above")
+    @ConfigurationComments({"# First comment line", "# Second comment line"})
     public String helloWorld = "Hello, world!";
 }
 ```
-**Note:**
-> * The path in the comment must always contain part of the configuration field path.
-> * Each line of the comment must contain the # character at the beginning. The use of blank lines is also allowed.
-
 After calling the `load()` method, you will see the following configuration:
 
 ```yaml
-# Single-line comment
+# First comment line
+# Second comment line
 Hello-world:
-
-  # Indented Comment
   With-comment-above: Hello, world!
 ```
 Also you can easily create your own field types for configurations.
@@ -208,7 +183,7 @@ public class POJO
 	return this.name + ":" + this.id;
     }
 
-    public static POJO deserialize(String string)
+    public static POJO deserialize(String serialized)
     {
 	String[] parts = string.split(":");
 		
@@ -225,25 +200,18 @@ extends AbstractConfigurationData<POJO>
     {
         super(POJO.class);
     }
-	
+
     @Override
-    public void set(FileConfiguration configuration, String path, POJO value, Class<?>... type)
+    public void set(FileConfiguration configuration, String path, ExampleObject value, Field field) 
     {
         configuration.set(path, value.serialize());
     }
 
     @Override
-    public POJO get(FileConfiguration configuration, String path, Class<?>... type)
+    public POJO get(FileConfiguration configuration, String path, Field field)
     {
-        return POJO.deserialize(configuration.getString(path));
-    }
-
-    @Override
-    public POJO get(FileConfiguration configuration, String path, POJO def, Class<?>... type)
-    {
-	POJO pojo = this.get(configuration, path, type);
-		
-        return pojo == null ? def : pojo;
+        // You must return null if path is not set in the configuration
+        return configuration.isSet(path) ? POJO.deserialize(configuration.getString(path)) : null;
     }
 
     @Override
@@ -251,16 +219,10 @@ extends AbstractConfigurationData<POJO>
     {
         return configuration.isString(path);
     }
-
-    @Override
-    public POJO getDefault()
-    {
-        return new POJO("null", 0);
-    }
 }
 ```
 
-Don't forget to register your ConfigurationData class:
+Don't forget to register your custom ConfigurationData class:
 ```java
 public class Main
 extends JavaPlugin 
@@ -272,7 +234,7 @@ extends JavaPlugin
     @Override
     public void onEnable() 
     {
-	ConfigurationManager.register(configurationDataPOJO);
+	ConfigurationsDataManager.getInstance().register(configurationDataPOJO);
 		
         this.messagesConfiguration.load();
 
