@@ -255,4 +255,4 @@ extends JavaPlugin
 For bugs, questions and discussions please use the [Github Issues](https://github.com/Xezard/XConfiguration/issues).
 
 ## License
-XConfiguration is licensed under the Apache 2.0 License. Please see [LICENSE](https://github.com/Xezard/XConfiguration/blob/master/LICENSE "LICENSE") for more info.
+XConfiguration is licensed under the GPL-3.0 License. Please see [LICENSE](https://github.com/Xezard/XConfiguration/blob/master/LICENSE "LICENSE") for more info.
