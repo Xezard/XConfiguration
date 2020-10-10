@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@ConfigurationComments({"test", "kek"})
 public class ExampleConfiguration
 extends Configuration
 {

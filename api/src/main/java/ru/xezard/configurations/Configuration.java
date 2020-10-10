@@ -19,6 +19,7 @@
  */
 package ru.xezard.configurations;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -54,6 +55,13 @@ implements IConfiguration
         configuration.load(file);
 
         boolean updated = false;
+
+        ConfigurationComments header = this.getClass().getAnnotation(ConfigurationComments.class);
+
+        if (header != null)
+        {
+            configuration.options().header(Joiner.on("\r\n").join(header.value()));
+        }
 
         for (Map.Entry<Field, SerializationOptions> fieldData : this.getFieldsData().entrySet())
         {
@@ -129,6 +137,13 @@ implements IConfiguration
         configuration.load(file);
 
         boolean hasChanges = false;
+
+        ConfigurationComments header = this.getClass().getAnnotation(ConfigurationComments.class);
+
+        if (header != null)
+        {
+            configuration.options().header(Joiner.on("\r\n").join(header.value()));
+        }
 
         for (Map.Entry<Field, SerializationOptions> fieldData : this.getFieldsData().entrySet())
         {
