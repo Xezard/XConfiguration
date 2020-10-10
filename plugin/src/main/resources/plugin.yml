@@ -2,5 +2,5 @@ name: XConfiguration
 main: ru.xezard.configurations.spigot.ConfigurationPlugin
 description: Universal configuration library for yml
 author: Xezard
-version: 2.0.0
+version: 2.0.1
 api-version: 1.14
