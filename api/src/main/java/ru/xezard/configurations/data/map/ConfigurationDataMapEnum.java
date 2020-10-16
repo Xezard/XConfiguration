@@ -69,7 +69,6 @@ extends AbstractConfigurationDataMap<E>
 
         if (section == null)
         {
-            logger.warning("Can't find configuration section: " + path);
             return null;
         }
 

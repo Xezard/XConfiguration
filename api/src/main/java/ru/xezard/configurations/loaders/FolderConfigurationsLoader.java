@@ -34,7 +34,6 @@ implements IConfigurationLoader<T, File>
     private boolean deep;
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<T> load(Class<T> templateClass, File folder)
     {
         List<T> loadedConfigurations = new ArrayList<> ();
@@ -67,8 +66,8 @@ implements IConfigurationLoader<T, File>
             T template = null;
 
             try {
-                template = (T) templateClass.getConstructors()[0].newInstance(file.getAbsolutePath());
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                template = templateClass.getDeclaredConstructor(String.class).newInstance(file.getAbsolutePath());
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                 e.printStackTrace();
             }
 
