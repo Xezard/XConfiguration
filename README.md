@@ -1,6 +1,6 @@
 # XConfiguration
 
-[![GitHub](https://img.shields.io/github/license/xezard/XConfiguration)](https://github.com/Xezard/XConfiguration/blob/master/LICENSE) [![](https://jitpack.io/v/Xezard/XConfiguration.svg)](https://jitpack.io/#Xezard/XConfiguration)
+[![GitHub](https://img.shields.io/github/license/xezard/XConfiguration)](https://github.com/Xezard/XConfiguration/blob/master/LICENSE) [![](https://jitpack.io/v/Xezard/XConfiguration.svg)](https://jitpack.io/#Xezard/XConfiguration) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/xezard/XConfiguration)
 
 XConfiguration is a convenient library for interacting with the yml configurations.
 
