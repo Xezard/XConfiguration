@@ -21,6 +21,8 @@ package ru.xezard.configurations;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -48,7 +50,7 @@ implements IConfiguration
     @SneakyThrows
     private Configuration loadData(File file, boolean save)
     {
-        Map<String, String[]> comments = new HashMap<> ();
+        Multimap<String, String> comments = MultimapBuilder.hashKeys().arrayListValues().build();
 
         YamlConfiguration configuration = new YamlConfiguration();
 
@@ -77,7 +79,7 @@ implements IConfiguration
 
             if (fieldComments != null)
             {
-                comments.put(path, fieldComments);
+                comments.putAll(path, Arrays.asList(fieldComments));
             }
 
             boolean accessible = field.isAccessible();
@@ -130,7 +132,7 @@ implements IConfiguration
     @SuppressWarnings("unchecked")
     private Configuration saveData(File file)
     {
-        Map<String, String[]> comments = new HashMap<> ();
+        Multimap<String, String> comments = MultimapBuilder.hashKeys().arrayListValues().build();
 
         YamlConfiguration configuration = new YamlConfiguration();
 
@@ -159,7 +161,7 @@ implements IConfiguration
 
             if (fieldComments != null)
             {
-                comments.put(path, fieldComments);
+                comments.putAll(path, Arrays.asList(fieldComments));
             }
 
             boolean accessible = field.isAccessible();
@@ -240,7 +242,7 @@ implements IConfiguration
      * way to write comments to the yaml
      * file, but at least it works.
      */
-    private void addCommentsToFile(Map<String, String[]> comments, YamlConfiguration configuration, File file)
+    private void addCommentsToFile(Multimap<String, String> comments, YamlConfiguration configuration, File file)
     {
         if (comments.isEmpty())
         {
@@ -282,30 +284,34 @@ implements IConfiguration
                     }
 
                     yamlEffectiveModel.setCurrentIndent(lineIndent);
+                } else {
+                    comments.values().removeIf(line::contains);
                 }
 
                 String currentPath = yamlEffectiveModel.getCurrentPath();
 
-                comments.forEach((path, fieldComments) ->
+                Iterator<Map.Entry<String, String>> commentsEntries = comments.entries().iterator();
+
+                while (commentsEntries.hasNext())
                 {
-                    if (!currentPath.equals(path))
+                    Map.Entry<String, String> commentEntry = commentsEntries.next();
+
+                    if (!currentPath.equals(commentEntry.getKey()))
                     {
-                        return;
+                        break;
                     }
 
-                    for (String comment : fieldComments)
-                    {
-                        String trimmed = comment.startsWith("#") ? comment.trim() : "#" + comment.trim();
+                    String comment = commentEntry.getValue(),
+                           trimmed = comment.startsWith("#") ? comment.trim() : "#" + comment.trim();
 
-                        lines.add(Strings.repeat
-                        (
-                                " ",
-                                ((int) yamlEffectiveModel.getCurrentIndent() * configurationIndent)
-                        ) + trimmed);
-                    }
-                });
+                    lines.add(Strings.repeat
+                    (
+                            " ",
+                            ((int) yamlEffectiveModel.getCurrentIndent() * configurationIndent)
+                    ) + trimmed);
 
-                comments.remove(currentPath);
+                    commentsEntries.remove();
+                }
 
                 lines.add(line);
             }
