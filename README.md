@@ -2,9 +2,7 @@
 
 [![GitHub](https://img.shields.io/github/license/xezard/XConfiguration)](https://github.com/Xezard/XConfiguration/blob/master/LICENSE) 
 [![](https://jitpack.io/v/Xezard/XConfiguration.svg)](https://jitpack.io/#Xezard/XConfiguration) 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/xezard/XConfiguration) 
 ![Lines of code](https://img.shields.io/tokei/lines/github/Xezard/XConfiguration?label=lines%20of%20code) 
-
 ![Spiget Downloads](https://img.shields.io/spiget/downloads/70581)
 ![Spiget Rating](https://img.shields.io/spiget/rating/70581)
 
