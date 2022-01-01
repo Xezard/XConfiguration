@@ -7,6 +7,7 @@
 [![Spiget Downloads](https://img.shields.io/spiget/downloads/70581?label=downloads%20%5Bspigot%5D)](https://www.spigotmc.org/resources/xconfiguration.70581/)
 [![Github Releases Downloads](https://img.shields.io/github/downloads/Xezard/XConfiguration/total?label=downloads%20%5Bgithub%20releases%5D)](https://github.com/Xezard/XConfiguration/releases)
 [![Spiget Rating](https://img.shields.io/spiget/rating/70581)](https://www.spigotmc.org/resources/xconfiguration.70581/)
+[![Discord chat](https://img.shields.io/discord/775493797702139914?color=blue&label=discord)](https://discord.gg/JZ9uZ5aXwf)
 
 XConfiguration is a convenient library for interacting with the yml configurations.
 
